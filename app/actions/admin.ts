@@ -71,7 +71,7 @@ export async function assignEmailToGroup(groupName: string, email: string) {
             .onConflictDoUpdate({
                 target: groupAssignments.guestGroupName,
                 set: {
-                    email: email,
+                    email: email.toLowerCase(),
                     updatedAt: new Date()
                 }
             });

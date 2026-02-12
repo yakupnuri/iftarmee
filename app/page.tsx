@@ -6,13 +6,23 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/index";
-import { hosts, type Host, type Event as IftarEvent } from "@/db/schema";
+import { hosts, groupAssignments, type Host, type Event as IftarEvent } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 import { getGroups } from "@/app/actions/groups";
 
 export default async function HomePage() {
   const session = await auth();
+
+  // Find assignment if logged in
+  const assignment = session?.user?.email
+    ? await db.query.groupAssignments.findFirst({
+      where: eq(groupAssignments.email, session.user.email.toLowerCase()),
+    })
+    : null;
+
+  const isGuestGroup = !!assignment;
+  const guestGroupName = assignment?.guestGroupName || null;
 
   let events: IftarEvent[] = [];
   let allHosts: Host[] = [];
@@ -40,8 +50,6 @@ export default async function HomePage() {
 
   let userEventCount = 0;
   let currentHost = null;
-  const isGuestGroup = session?.user?.name && guestGroups.some(g => g.name === session.user?.name);
-  const guestGroupName = isGuestGroup ? session.user?.name : null;
 
   // Host Stats
   if (session?.user?.email && !isGuestGroup) {
