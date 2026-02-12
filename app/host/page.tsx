@@ -10,6 +10,7 @@ import { db } from "@/db/index";
 import { hosts } from "@/db/schema";
 import { eq, or } from "drizzle-orm";
 import { getGroups } from "@/app/actions/groups";
+import { WarningBanner } from "@/components/WarningBanner";
 
 export default async function HostPage() {
   const session = await auth();
@@ -50,6 +51,11 @@ export default async function HostPage() {
   const ramadanDates = getRamadanDates();
   const dbGroups = await getGroups();
   const guestGroups = dbGroups.length > 0 ? dbGroups : GUEST_GROUPS;
+  const unavailability = await db.query.groupUnavailability.findMany();
+  const hostUnavailableDates = unavailability.map(u => ({
+    date: u.date,
+    guestGroupName: u.guestGroupName
+  }));
 
   // Host'un kendi eventlerini filtrele
   const myEvents = events.filter(e => e.hostId === isRegisteredHost.id);
@@ -99,6 +105,8 @@ export default async function HostPage() {
             </div>
           </div>
         </div>
+
+        <WarningBanner />
 
         {/* Davet Listesi */}
         <div className="space-y-4 mb-12">
@@ -172,6 +180,8 @@ export default async function HostPage() {
 
         <div className="border-t border-slate-200 my-8"></div>
 
+        <WarningBanner />
+
         {/* Yeni Davet Formu */}
         <div className="bg-slate-100 rounded-3xl p-6 sm:p-8">
           <div className="mb-6">
@@ -185,6 +195,7 @@ export default async function HostPage() {
             userName={session.user?.name || ""}
             userEmail={session.user?.email || ""}
             guestGroups={guestGroups}
+            unavailableDates={hostUnavailableDates}
           />
         </div>
 

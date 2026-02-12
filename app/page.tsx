@@ -17,11 +17,13 @@ export default async function HomePage() {
   let events: IftarEvent[] = [];
   let allHosts: Host[] = [];
   let dbGroups: any[] = [];
+  let unavailability: any[] = [];
 
   try {
     events = await getEvents();
     allHosts = await db.query.hosts.findMany();
     dbGroups = await getGroups();
+    unavailability = await db.query.groupUnavailability.findMany();
   } catch (error) {
     console.error("Database fetch error:", error);
   }
@@ -67,6 +69,14 @@ export default async function HomePage() {
       }
       bookedDatesByGroup.get(event.guestGroupName)!.add(event.date);
     }
+  });
+
+  // Grubun kendi işaretlediği dolu günleri ekle
+  unavailability.forEach((un) => {
+    if (!bookedDatesByGroup.has(un.guestGroupName)) {
+      bookedDatesByGroup.set(un.guestGroupName, new Set());
+    }
+    bookedDatesByGroup.get(un.guestGroupName)!.add(un.date);
   });
 
   const statusColors = {

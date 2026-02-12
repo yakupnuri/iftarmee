@@ -2,15 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/index";
-import { events, hosts, groupAssignments } from "@/db/schema";
+import { hosts, events, groupAssignments, groupUnavailability } from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { GUEST_GROUPS, getGuestGroupByName } from "@/lib/guest-groups";
 import { nanoid } from "@/lib/nanoid";
 
 import { isAdmin } from "@/app/actions/admin";
-
 import { getGroups } from "@/app/actions/groups";
+import {
+  sendEmail,
+  getNewInvitationEmailHtml,
+  getInvitationAcceptedEmailHtml,
+  getInvitationRejectedEmailHtml
+} from "@/lib/mail";
 
 export async function createEvent(formData: FormData) {
   const session = await auth();
@@ -69,6 +74,18 @@ export async function createEvent(formData: FormData) {
       return { error: "Bu grup için bu tarihte zaten bir davet bulunuyor." };
     }
 
+    // --- YENİ: Grubun kendi işaretlediği DOLU GÜN kontrolü ---
+    const groupIsUnavailable = await db.query.groupUnavailability.findFirst({
+      where: and(
+        eq(groupUnavailability.date, date),
+        eq(groupUnavailability.guestGroupName, guestGroupName)
+      )
+    });
+
+    if (groupIsUnavailable) {
+      return { error: "Bu grup bu tarihte müsait olmadığını (dolu olduğunu) belirtmiştir." };
+    }
+
     await db.insert(events).values({
       id: nanoid(),
       date,
@@ -84,6 +101,17 @@ export async function createEvent(formData: FormData) {
     revalidatePath("/");
     revalidatePath("/host");
     revalidatePath("/admin");
+
+    // -- Mail Gönderimi (Yeni Davet) --
+    const groupEmail = (guestGroup as any).email;
+    if (groupEmail) {
+      await sendEmail({
+        to: groupEmail,
+        subject: `Yeni İftar Daveti: ${session.user.name} `,
+        html: getNewInvitationEmailHtml(session.user.name || "Bir Davet Sahibi", date, guestGroupName)
+      });
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error creating event:", error);
@@ -142,6 +170,19 @@ export async function acceptEvent(eventId: string) {
     revalidatePath("/");
     revalidatePath("/admin");
     revalidatePath("/my-invitations");
+
+    // -- Mail Gönderimi (Davet Kabul Edildi) --
+    const host = await db.query.hosts.findFirst({
+      where: eq(hosts.id, event.hostId)
+    });
+    if (host?.email) {
+      await sendEmail({
+        to: host.email,
+        subject: "İftar Davetiniz Kabul Edildi! ✅",
+        html: getInvitationAcceptedEmailHtml(host.name, event.date, event.guestGroupName)
+      });
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Accept Error:", error);
@@ -192,6 +233,20 @@ export async function rejectEvent(eventId: string, reason?: string) {
     revalidatePath("/");
     revalidatePath("/admin");
     revalidatePath("/my-invitations");
+
+    // -- Mail Gönderimi (Davet Reddedildi) --
+    const hostData = await db.query.hosts.findFirst({
+      where: eq(hosts.id, event.hostId)
+    });
+    const finalReason = reason || defaultReason;
+    if (hostData?.email) {
+      await sendEmail({
+        to: hostData.email,
+        subject: "İftar Davetiniz Hakkında Bilgilendirme ❌",
+        html: getInvitationRejectedEmailHtml(hostData.name, event.date, event.guestGroupName, finalReason)
+      });
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Reject Error:", error);

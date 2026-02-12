@@ -20,6 +20,7 @@ interface HostFormProps {
     userName: string;
     userEmail: string;
     guestGroups: GuestGroupUI[];
+    unavailableDates: { date: string; guestGroupName: string }[];
 }
 
 export function HostForm(props: HostFormProps) {
@@ -30,7 +31,7 @@ export function HostForm(props: HostFormProps) {
     );
 }
 
-function HostFormContent({ ramadanDates, bookedEvents, userName, userEmail, guestGroups }: HostFormProps) {
+function HostFormContent({ ramadanDates, bookedEvents, userName, userEmail, guestGroups, unavailableDates }: HostFormProps) {
     const searchParams = useSearchParams();
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedGroup, setSelectedGroup] = useState("");
@@ -45,9 +46,15 @@ function HostFormContent({ ramadanDates, bookedEvents, userName, userEmail, gues
     }, [searchParams]);
 
     const getBookedGroupsForDate = (dateStr: string) => {
-        return bookedEvents
+        const booked = bookedEvents
             .filter((e) => e.date === dateStr && (e.status === "pending" || e.status === "accepted"))
             .map((e) => e.guestGroupName);
+
+        const unavailable = unavailableDates
+            .filter((u) => u.date === dateStr)
+            .map((u) => u.guestGroupName);
+
+        return Array.from(new Set([...booked, ...unavailable]));
     };
 
     const bookedGroupsForSelectedDate = selectedDate ? getBookedGroupsForDate(selectedDate) : [];

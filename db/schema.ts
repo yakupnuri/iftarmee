@@ -39,6 +39,14 @@ export const groupAssignments = sqliteTable("group_assignments", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 
+export const groupUnavailability = sqliteTable("group_unavailability", {
+  id: text("id").primaryKey(),
+  guestGroupName: text("guest_group_name").notNull(),
+  date: text("date").notNull(),
+  reason: text("reason"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export type Host = typeof hosts.$inferSelect;
 export type NewHost = typeof hosts.$inferInsert;
 export type Event = typeof events.$inferSelect;
