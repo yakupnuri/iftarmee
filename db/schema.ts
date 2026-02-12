@@ -23,6 +23,16 @@ export const events = sqliteTable("events", {
   dateGroupIdx: uniqueIndex("date_group_idx").on(table.date, table.guestGroupName),
 }));
 
+export const guestGroups = sqliteTable("guest_groups", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  email: text("email").notNull(),
+  count: integer("count").notNull(),
+  isDelivery: integer("is_delivery", { mode: "boolean" }).default(false),
+  color: text("color"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const groupAssignments = sqliteTable("group_assignments", {
   guestGroupName: text("guest_group_name").primaryKey(),
   email: text("email").notNull(),
@@ -33,3 +43,5 @@ export type Host = typeof hosts.$inferSelect;
 export type NewHost = typeof hosts.$inferInsert;
 export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
+export type GuestGroup = typeof guestGroups.$inferSelect;
+export type NewGuestGroup = typeof guestGroups.$inferInsert;

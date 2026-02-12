@@ -2,8 +2,10 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { isAdmin, getGroupAssignments } from "@/app/actions/admin";
 import { getEvents } from "@/app/actions/events";
+import { getGroups } from "@/app/actions/groups";
 import { Header } from "@/components/Header";
 import { GroupMailModal } from "@/components/GroupMailModal";
+import { GuestGroupManagement } from "@/components/GuestGroupManagement";
 import { GUEST_GROUPS } from "@/lib/guest-groups";
 
 export default async function AdminPage() {
@@ -16,6 +18,7 @@ export default async function AdminPage() {
 
     const assignments = await getGroupAssignments();
     const allEvents = await getEvents();
+    const groups = await getGroups();
 
     // -- Statistics Calculation --
     const totalAccepted = allEvents.filter(e => e.status === 'accepted').length;
@@ -32,7 +35,8 @@ export default async function AdminPage() {
     const uniqueHosts = new Set(allEvents.map(e => e.hostId)).size;
 
     // Group-wise stats
-    const groupStats = GUEST_GROUPS.map(group => {
+    const currentGroupsForStats = groups.length > 0 ? groups : GUEST_GROUPS;
+    const groupStats = currentGroupsForStats.map(group => {
         const groupEvents = allEvents.filter(e => e.guestGroupName === group.name);
         return {
             name: group.name,
@@ -109,7 +113,10 @@ export default async function AdminPage() {
                     </div>
                 </section>
 
-                {/* 2. Group Performance Grid */}
+                {/* 2. Group Management */}
+                <GuestGroupManagement groups={groups} />
+
+                {/* 3. Group Performance Grid */}
                 <section>
                     <h2 className="text-3xl font-black text-slate-900 mb-6 tracking-tight">Grup Performansı</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -138,44 +145,6 @@ export default async function AdminPage() {
                                 </div>
                             </div>
                         ))}
-                    </div>
-                </section>
-
-                {/* 3. Access Management */}
-                <section className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-50 rounded-full blur-3xl -mr-32 -mt-32 opacity-50 font-black"></div>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
-                        <div className="space-y-3 max-w-2xl">
-                            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-[1.1]">Erişim ve Mail Tanımlama</h2>
-                            <p className="text-slate-500 font-medium text-lg">Hangi misafir grubunun hangi mail adresiyle giriş yapacağını belirleyin.</p>
-                        </div>
-                        <div>
-                            <GroupMailModal currentAssignments={assignments} />
-                        </div>
-                    </div>
-
-                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {assignments.map(assignment => (
-                            <div key={assignment.guestGroupName} className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-                                <div className="space-y-1 mb-4">
-                                    <div className="text-[10px] font-black uppercase text-primary-600 tracking-widest flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 bg-primary-600 rounded-full"></span>
-                                        Aktif
-                                    </div>
-                                    <h4 className="text-lg font-black text-slate-900 tracking-tight">
-                                        {assignment.guestGroupName}
-                                    </h4>
-                                </div>
-                                <div className="bg-white p-3 rounded-xl border border-slate-200/50 text-sm font-bold text-slate-600 truncate">
-                                    {assignment.email}
-                                </div>
-                            </div>
-                        ))}
-                        {assignments.length === 0 && (
-                            <div className="col-span-full py-8 text-center text-slate-400 font-medium italic">
-                                Henüz tanımlanmış bir grup yöneticisi yok.
-                            </div>
-                        )}
                     </div>
                 </section>
 
