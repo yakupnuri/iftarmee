@@ -1,4 +1,12 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
 
 interface SendMailProps {
   to: string;
@@ -6,28 +14,22 @@ interface SendMailProps {
   html: string;
 }
 
-// Resend nesnesini her çağrıda oluşturmak yerine sadece ihtiyaç duyulduğunda oluşturacağız
 export async function sendEmail({ to, subject, html }: SendMailProps) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn("RESEND_API_KEY bulunamadı, mail gönderilemiyor.");
-    return { error: "API Key missing" };
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    console.warn("Gmail kimlik bilgileri bulunamadı, mail gönderilemiyor.");
+    return { error: "Gmail credentials missing" };
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
-    const { data, error } = await resend.emails.send({
-      from: "Iftar Match <onboarding@resend.dev>", // Alan adınız yoksa bu kalmalı
+    const info = await transporter.sendMail({
+      from: `"Iftar Match" <${process.env.GMAIL_USER}>`,
       to,
       subject,
       html,
     });
 
-    if (error) {
-      console.error("Mail Error:", error);
-      return { error };
-    }
-
-    return { success: true, data };
+    console.log("Message sent: %s", info.messageId);
+    return { success: true, data: info };
   } catch (error) {
     console.error("Mail Unexpected Error:", error);
     return { error };
@@ -46,7 +48,7 @@ export function getNewInvitationEmailHtml(hostName: string, dateStr: string, gro
         <p style="margin: 0;"><strong>Tarih:</strong> ${dateStr}</p>
         <p style="margin: 0;"><strong>Davet Eden:</strong> ${hostName}</p>
       </div>
-      <p>Daveti onaylamak veya reddetmek için yönetici paneline giriş yapabilirsiniz.</p>
+      <p>Daveti onaylamak veya reddetmek için <a href="https://iftarmee.vercel.app/login" style="color: #059669; font-weight: bold; text-decoration: none;">yönetici paneline giriş yapabilirsiniz.</a></p>
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
       <p style="font-size: 12px; color: #94a3b8;">Bu e-posta Iftar Match sistemi tarafından otomatik olarak oluşturulmuştur.</p>
     </div>

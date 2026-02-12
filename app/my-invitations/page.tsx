@@ -145,7 +145,14 @@ export default async function MyInvitationsPage() {
                                                 <h4 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-none group-hover:text-primary-700 transition-colors">
                                                     {host?.name || "Bilinmeyen Ev Sahibi"}
                                                 </h4>
-                                                <p className="text-slate-500 font-medium italic">Davet Eden Kişi / Ev Sahibi</p>
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="text-slate-500 font-medium italic">Davet Eden Kişi / Ev Sahibi</p>
+                                                    {host?.email && (
+                                                        <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md border border-primary-100 flex items-center gap-1">
+                                                            ✉️ {host.email}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {isAdmin && (

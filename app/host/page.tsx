@@ -138,11 +138,16 @@ export default async function HostPage() {
                           {statusText}
                         </span>
                       </div>
-                      <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-slate-800 flex flex-wrap items-center gap-2">
                         {event.guestGroupName}
                         <span className="text-sm font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
                           {group?.count || '?'} Kişi
                         </span>
+                        {(group as any)?.email && (
+                          <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md border border-primary-100">
+                            ✉️ {(group as any).email}
+                          </span>
+                        )}
                       </h3>
                     </div>
 
