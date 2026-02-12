@@ -1,5 +1,3 @@
-import { db } from "@/db/index";
-
 export const GUEST_GROUPS = [
   {
     name: "Muaz Ailesi",
@@ -15,7 +13,7 @@ export const GUEST_GROUPS = [
   },
   {
     name: "Erkek Öğrenci Evi",
-    count: 5,
+    count: 8,
     isDelivery: false,
     color: "bg-blue-100 border-blue-300 text-blue-800 hover:ring-blue-400"
   },
@@ -33,12 +31,6 @@ export const GUEST_GROUPS = [
     color: "bg-pink-100 border-pink-300 text-pink-800 hover:ring-pink-400"
   },
 ];
-
-export async function getAllGuestGroups() {
-  const dbGroups = await db.query.guestGroups.findMany();
-  if (dbGroups.length > 0) return dbGroups;
-  return GUEST_GROUPS;
-}
 
 export type GuestGroup = typeof GUEST_GROUPS[number];
 

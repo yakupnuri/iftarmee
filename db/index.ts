@@ -22,7 +22,7 @@ if (!url) {
 const authToken = process.env.TURSO_AUTH_TOKEN;
 
 // Create directory if using local file
-if (url.startsWith("file:")) {
+if (typeof window === "undefined" && url.startsWith("file:")) {
   const dbPath = url.replace("file:", "");
   // If dbPath is relative, make absolute to ensure directory exists
   const absolutePath = path.isAbsolute(dbPath) ? dbPath : path.join(process.cwd(), dbPath);
