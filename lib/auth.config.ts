@@ -18,28 +18,24 @@ export const authConfig = {
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
             const isAdmin = auth?.user?.email === "vahidnuri@gmail.com";
+            const isOnAdmin = nextUrl.pathname.startsWith("/admin");
+            const isOnHost = nextUrl.pathname.startsWith("/host");
+            const isOnMyInvitations = nextUrl.pathname.startsWith("/my-invitations");
             const isAuthPage = nextUrl.pathname === "/login";
-            const isProtectedRoute = nextUrl.pathname.startsWith("/host") || nextUrl.pathname.startsWith("/admin") || nextUrl.pathname.startsWith("/my-invitations");
 
-            if (isProtectedRoute) {
+            if (isOnAdmin || isOnHost || isOnMyInvitations) {
                 if (isLoggedIn) {
-                    if (nextUrl.pathname.startsWith("/admin") && !isAdmin) {
+                    if (isOnAdmin && !isAdmin) {
                         return Response.redirect(new URL("/", nextUrl));
                     }
                     return true;
                 }
-                return false; // Redirect to login
+                return false; // Login sayfasına yönlendir
             }
 
             if (isAuthPage && isLoggedIn) {
-                if (isAdmin) {
-                    return Response.redirect(new URL("/admin", nextUrl));
-                }
-                return Response.redirect(new URL("/", nextUrl));
-            }
-
-            if (nextUrl.pathname === "/" && isAdmin) {
-                return Response.redirect(new URL("/admin", nextUrl));
+                const redirectUrl = isAdmin ? "/admin" : "/";
+                return Response.redirect(new URL(redirectUrl, nextUrl));
             }
 
             return true;

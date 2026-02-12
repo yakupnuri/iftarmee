@@ -6,7 +6,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/index";
-import { hosts } from "@/db/schema";
+import { hosts, type Host, type Event as IftarEvent } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 const statusColors = {
@@ -29,8 +29,15 @@ function getGroupColor(groupName: string) {
 export default async function HomePage() {
   const session = await auth();
 
-  const events = await getEvents();
-  const allHosts = await db.query.hosts.findMany();
+  let events: IftarEvent[] = [];
+  let allHosts: Host[] = [];
+  try {
+    events = await getEvents();
+    allHosts = await db.query.hosts.findMany();
+  } catch (error) {
+    console.error("Database fetch error:", error);
+  }
+
   const hostMap = new Map(allHosts.map(h => [h.id, h.name]));
   const ramadanDates = getRamadanDates();
 
@@ -41,14 +48,18 @@ export default async function HomePage() {
 
   // Host Stats
   if (session?.user?.email && !isGuestGroup) {
-    currentHost = await db.query.hosts.findFirst({
-      where: eq(hosts.email, session.user.email),
-    });
+    try {
+      currentHost = await db.query.hosts.findFirst({
+        where: eq(hosts.email, session.user.email),
+      });
 
-    if (currentHost) {
-      userEventCount = events.filter(
-        (e) => e.hostId === currentHost!.id && (e.status === "pending" || e.status === "accepted")
-      ).length;
+      if (currentHost) {
+        userEventCount = events.filter(
+          (e) => e.hostId === currentHost!.id && (e.status === "pending" || e.status === "accepted")
+        ).length;
+      }
+    } catch (error) {
+      console.error("Host stats error:", error);
     }
   }
 
