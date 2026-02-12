@@ -10,6 +10,8 @@ import { nanoid } from "@/lib/nanoid";
 
 import { isAdmin } from "@/app/actions/admin";
 
+import { getGroups } from "@/app/actions/groups";
+
 export async function createEvent(formData: FormData) {
   const session = await auth();
 
@@ -24,7 +26,11 @@ export async function createEvent(formData: FormData) {
     return { error: "Missing fields" };
   }
 
-  const guestGroup = getGuestGroupByName(guestGroupName);
+  // Get groups from DB or Fallback
+  const dbGroups = await getGroups();
+  const guestGroups = dbGroups.length > 0 ? dbGroups : GUEST_GROUPS;
+  const guestGroup = guestGroups.find(g => g.name === guestGroupName);
+
   if (!guestGroup) {
     return { error: "Invalid group" };
   }

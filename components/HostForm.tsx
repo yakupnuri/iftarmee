@@ -2,17 +2,24 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { GUEST_GROUPS } from "@/lib/guest-groups";
 import { formatDate, formatDateLong } from "@/lib/ramadan-dates";
 import { createEvent } from "@/app/actions/events";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
+interface GuestGroupUI {
+    id?: string;
+    name: string;
+    count: number;
+    isDelivery: boolean | null;
+    color?: string | null;
+}
 
 interface HostFormProps {
     ramadanDates: Date[];
     bookedEvents: { date: string; guestGroupName: string; status: string }[];
     userName: string;
     userEmail: string;
+    guestGroups: GuestGroupUI[];
 }
 
 export function HostForm(props: HostFormProps) {
@@ -23,7 +30,7 @@ export function HostForm(props: HostFormProps) {
     );
 }
 
-function HostFormContent({ ramadanDates, bookedEvents, userName, userEmail }: HostFormProps) {
+function HostFormContent({ ramadanDates, bookedEvents, userName, userEmail, guestGroups }: HostFormProps) {
     const searchParams = useSearchParams();
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedGroup, setSelectedGroup] = useState("");
@@ -44,7 +51,7 @@ function HostFormContent({ ramadanDates, bookedEvents, userName, userEmail }: Ho
     };
 
     const bookedGroupsForSelectedDate = selectedDate ? getBookedGroupsForDate(selectedDate) : [];
-    const selectedGroupData = GUEST_GROUPS.find(g => g.name === selectedGroup);
+    const selectedGroupData = guestGroups.find(g => g.name === selectedGroup);
 
     async function handleSubmit(formData: FormData) {
         setIsSubmitting(true);
@@ -88,7 +95,7 @@ function HostFormContent({ ramadanDates, bookedEvents, userName, userEmail }: Ho
                             {ramadanDates.map((date, index) => {
                                 const dateStr = formatDate(date);
                                 const bookedGroupsCount = getBookedGroupsForDate(dateStr).length;
-                                const isFullyBooked = bookedGroupsCount >= GUEST_GROUPS.length;
+                                const isFullyBooked = bookedGroupsCount >= guestGroups.length;
 
                                 return (
                                     <option
@@ -118,7 +125,7 @@ function HostFormContent({ ramadanDates, bookedEvents, userName, userEmail }: Ho
                             className="w-full border border-gray-300 rounded-lg px-3 py-3 sm:px-4 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base disabled:bg-gray-100 disabled:text-gray-400 bg-gray-50/50"
                         >
                             <option value="">{selectedDate ? "Grup seçin" : "Önce tarih seçin"}</option>
-                            {GUEST_GROUPS.map((group) => {
+                            {guestGroups.map((group) => {
                                 const isBooked = bookedGroupsForSelectedDate.includes(group.name);
                                 return (
                                     <option

@@ -9,6 +9,7 @@ import Link from "next/link";
 import { db } from "@/db/index";
 import { hosts } from "@/db/schema";
 import { eq, or } from "drizzle-orm";
+import { getGroups } from "@/app/actions/groups";
 
 export default async function HostPage() {
   const session = await auth();
@@ -47,6 +48,8 @@ export default async function HostPage() {
 
   const events = await getEvents();
   const ramadanDates = getRamadanDates();
+  const dbGroups = await getGroups();
+  const guestGroups = dbGroups.length > 0 ? dbGroups : GUEST_GROUPS;
 
   // Host'un kendi eventlerini filtrele
   const myEvents = events.filter(e => e.hostId === isRegisteredHost.id);
@@ -105,7 +108,7 @@ export default async function HostPage() {
             </div>
           ) : (
             myEvents.map((event) => {
-              const group = GUEST_GROUPS.find(g => g.name === event.guestGroupName);
+              const group = guestGroups.find(g => g.name === event.guestGroupName);
               const isAccepted = event.status === 'accepted';
               const isRejected = event.status === 'rejected';
               const isPending = event.status === 'pending';
@@ -181,6 +184,7 @@ export default async function HostPage() {
             bookedEvents={bookedEvents}
             userName={session.user?.name || ""}
             userEmail={session.user?.email || ""}
+            guestGroups={guestGroups}
           />
         </div>
 

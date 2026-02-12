@@ -9,33 +9,28 @@ import { db } from "@/db/index";
 import { hosts, type Host, type Event as IftarEvent } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-const statusColors = {
-  empty: "bg-white hover:bg-gray-50 border-gray-200 text-gray-400 opacity-60",
-  partiallyBooked: "bg-amber-50 border-amber-300 text-amber-800 shadow-sm",
-  fullyBooked: "bg-emerald-50 border-emerald-400 text-emerald-800 shadow-md ring-1 ring-emerald-400/20",
-};
-
-const statusLabels = {
-  empty: "Boş",
-  partiallyBooked: "Kısmen Dolu",
-  fullyBooked: "Tüm Gruplar Dolu",
-};
-
-function getGroupColor(groupName: string) {
-  const group = GUEST_GROUPS.find(g => g.name === groupName);
-  return group?.color || "bg-gray-100 border-gray-300 text-gray-800 hover:ring-gray-400";
-}
+import { getGroups } from "@/app/actions/groups";
 
 export default async function HomePage() {
   const session = await auth();
 
   let events: IftarEvent[] = [];
   let allHosts: Host[] = [];
+  let dbGroups: any[] = [];
+
   try {
     events = await getEvents();
     allHosts = await db.query.hosts.findMany();
+    dbGroups = await getGroups();
   } catch (error) {
     console.error("Database fetch error:", error);
+  }
+
+  const guestGroups = dbGroups.length > 0 ? dbGroups : GUEST_GROUPS;
+
+  function getGroupColor(groupName: string) {
+    const group = guestGroups.find(g => g.name === groupName);
+    return group?.color || "bg-gray-100 border-gray-300 text-gray-800 hover:ring-gray-400";
   }
 
   const hostMap = new Map(allHosts.map(h => [h.id, h.name]));
@@ -43,7 +38,7 @@ export default async function HomePage() {
 
   let userEventCount = 0;
   let currentHost = null;
-  const isGuestGroup = session?.user?.name && GUEST_GROUPS.some(g => g.name === session.user?.name);
+  const isGuestGroup = session?.user?.name && guestGroups.some(g => g.name === session.user?.name);
   const guestGroupName = isGuestGroup ? session.user?.name : null;
 
   // Host Stats
@@ -73,6 +68,18 @@ export default async function HomePage() {
       bookedDatesByGroup.get(event.guestGroupName)!.add(event.date);
     }
   });
+
+  const statusColors = {
+    empty: "bg-white hover:bg-gray-50 border-gray-200 text-gray-400 opacity-60",
+    partiallyBooked: "bg-amber-50 border-amber-300 text-amber-800 shadow-sm",
+    fullyBooked: "bg-emerald-50 border-emerald-400 text-emerald-800 shadow-md ring-1 ring-emerald-400/20",
+  };
+
+  const statusLabels = {
+    empty: "Boş",
+    partiallyBooked: "Kısmen Dolu",
+    fullyBooked: "Tüm Gruplar Dolu",
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -180,7 +187,7 @@ export default async function HomePage() {
               .filter(([_, dates]) => dates.has(dateStr))
               .map(([group]) => group);
 
-            const isFullyBooked = bookedGroups.length >= GUEST_GROUPS.length;
+            const isFullyBooked = bookedGroups.length >= guestGroups.length;
             const isPartiallyBooked = bookedGroups.length > 0;
 
             let status: keyof typeof statusColors;
