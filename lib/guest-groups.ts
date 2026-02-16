@@ -18,8 +18,14 @@ export const GUEST_GROUPS = [
     color: "bg-blue-100 border-blue-300 text-blue-800 hover:ring-blue-400"
   },
   {
-    name: "Yalnız Muhacir Erkek Arkadaşlar",
+    name: "Muhacir Abiler",
     count: 5,
+    isDelivery: false,
+    color: "bg-orange-100 border-orange-300 text-orange-800 hover:ring-orange-400"
+  },
+  {
+    name: "Voorschoten  muhacir abiler",
+    count: 4,
     isDelivery: false,
     color: "bg-orange-100 border-orange-300 text-orange-800 hover:ring-orange-400"
   },

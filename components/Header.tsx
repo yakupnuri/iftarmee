@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
-import { logoutAction } from "@/app/actions/auth";
+import { ADMIN_EMAILS } from "@/lib/admin-emails";
+import { loginAction, logoutAction } from "@/app/actions/auth";
 import { db } from "@/db/index";
 import { groupAssignments } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,7 +10,7 @@ import { Home, PlusCircle, Calendar, Shield, LogOut, User } from "lucide-react";
 
 export async function Header() {
   const session = await auth();
-  const isAdmin = session?.user?.email === "vahidnuri@gmail.com";
+  const isAdmin = session?.user?.email ? ADMIN_EMAILS.includes(session.user.email.toLowerCase()) : false;
 
   // Bir gruba atanmış mı kontrol et
   const assignment = session?.user?.email ? await db.query.groupAssignments.findFirst({
@@ -49,19 +50,19 @@ export async function Header() {
                 </form>
               </>
             ) : (
-              <Link href="/login">
-                <Button size="md" className="font-black uppercase tracking-widest px-8">Giriş Yap</Button>
-              </Link>
+              <form action={loginAction}>
+                <Button type="submit" size="md" className="font-black uppercase tracking-widest px-8">Google ile Giriş Yap</Button>
+              </form>
             )}
           </div>
 
           {/* Mobile Profile Icon (Optional if not logged in) */}
           {!session && (
-            <Link href="/login" className="sm:hidden">
-              <Button size="sm" className="rounded-full w-10 h-10 p-0 shadow-lg shadow-primary-100">
-                <User className="w-5 h-5" />
-              </Button>
-            </Link>
+            <form action={loginAction} className="sm:hidden">
+              <button type="submit" className="rounded-full w-10 h-10 p-0 shadow-lg shadow-primary-100 bg-primary-600 hover:bg-primary-700 transition-colors flex items-center justify-center">
+                <User className="w-5 h-5 text-white" />
+              </button>
+            </form>
           )}
         </div>
       </header>
@@ -77,20 +78,20 @@ export async function Header() {
               <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Ana Sayfa</span>
             </Link>
 
-            {!assignment && (
-              <Link href="/host" className="flex flex-col items-center gap-1 group">
-                <div className="p-2 group-active:scale-95 transition-transform rounded-2xl group-hover:bg-slate-50">
-                  <PlusCircle className="w-6 h-6 text-slate-400 group-hover:text-primary-600" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Oluştur</span>
-              </Link>
-            )}
+            <Link href="/host" className="flex flex-col items-center gap-1 group">
+              <div className="p-2 group-active:scale-95 transition-transform rounded-2xl group-hover:bg-slate-50">
+                <PlusCircle className="w-6 h-6 text-slate-400 group-hover:text-primary-600" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Oluştur</span>
+            </Link>
 
-            <Link href={!assignment ? "/host" : "/my-invitations"} className="flex flex-col items-center gap-1 group">
+            <Link href="/my-invitations" className="flex flex-col items-center gap-1 group">
               <div className="relative p-2 group-active:scale-95 transition-transform rounded-2xl group-hover:bg-slate-50">
                 <Calendar className="w-6 h-6 text-slate-400 group-hover:text-primary-600" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Davetlerim</span>
+              <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">
+                {isAdmin ? "Tüm Davetler" : "Davetlerim"}
+              </span>
             </Link>
 
             {isAdmin && (
@@ -112,11 +113,11 @@ export async function Header() {
             </form>
           </>
         ) : (
-          <Link href="/login" className="w-full">
-            <Button className="w-full py-6 text-sm font-black uppercase tracking-widest shadow-lg shadow-primary-100 rounded-2xl">
-              Giriş Yap
+          <form action={loginAction} className="w-full">
+            <Button type="submit" className="w-full py-6 text-sm font-black uppercase tracking-widest shadow-lg shadow-primary-100 rounded-2xl">
+              Google ile Giriş Yap
             </Button>
-          </Link>
+          </form>
         )}
       </nav>
     </>

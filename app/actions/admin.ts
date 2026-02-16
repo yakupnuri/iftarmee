@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "@/lib/nanoid";
 
-const ADMIN_EMAILS = ["vahidnuri@gmail.com"]; // Vahit Nuri'nin e-postası.
+import { ADMIN_EMAILS } from "@/lib/admin-emails";
 
 export async function isAdmin() {
     const session = await auth();

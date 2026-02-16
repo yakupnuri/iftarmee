@@ -7,11 +7,11 @@ import { revalidatePath } from "next/cache";
 import { nanoid } from "@/lib/nanoid";
 import { auth } from "@/lib/auth";
 
-const ADMIN_EMAIL = "vahidnuri@gmail.com";
+import { ADMIN_EMAILS } from "@/lib/admin-emails";
 
 async function checkAdmin() {
     const session = await auth();
-    return session?.user?.email === ADMIN_EMAIL;
+    return session?.user?.email ? ADMIN_EMAILS.includes(session.user.email.toLowerCase()) : false;
 }
 
 export async function getGroups() {

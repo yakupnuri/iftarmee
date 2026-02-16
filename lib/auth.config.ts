@@ -17,7 +17,8 @@ export const authConfig = {
     callbacks: {
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
-            const isAdmin = auth?.user?.email === "vahidnuri@gmail.com";
+            const { ADMIN_EMAILS } = require("./admin-emails");
+            const isAdmin = auth?.user?.email ? ADMIN_EMAILS.includes(auth.user.email.toLowerCase()) : false;
             const isOnAdmin = nextUrl.pathname.startsWith("/admin");
             const isOnHost = nextUrl.pathname.startsWith("/host");
             const isOnMyInvitations = nextUrl.pathname.startsWith("/my-invitations");

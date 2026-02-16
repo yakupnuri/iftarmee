@@ -7,17 +7,22 @@ import { Header } from "@/components/Header";
 import { GroupMailModal } from "@/components/GroupMailModal";
 import { GuestGroupManagement } from "@/components/GuestGroupManagement";
 import { GUEST_GROUPS } from "@/lib/guest-groups";
+import { db } from "@/db/index";
+import { hosts } from "@/db/schema";
+import { ADMIN_EMAILS } from "@/lib/admin-emails";
+import { AdminTabs } from "@/components/AdminTabs";
+import { InvitationsTable } from "@/components/InvitationsTable";
 
 export default async function AdminPage() {
     const session = await auth();
-    const admin = session?.user?.email === "vahidnuri@gmail.com";
+    const admin = session?.user?.email ? ADMIN_EMAILS.includes(session.user.email.toLowerCase()) : false;
 
     if (!admin) {
         redirect("/");
     }
 
-    const assignments = await getGroupAssignments();
     const allEvents = await getEvents();
+    const allHosts = await db.query.hosts.findMany();
     const groups = await getGroups();
 
     // -- Statistics Calculation --
@@ -55,7 +60,7 @@ export default async function AdminPage() {
                 {/* 1. Dashboard Overview Cards */}
                 <section>
                     <h2 className="text-3xl font-black text-slate-900 mb-6 tracking-tight">Genel Bakış</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
 
                         {/* Card 1: Total Iftars (Accepted) */}
                         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-emerald-100/50 relative overflow-hidden group hover:-translate-y-1 transition-transform">
@@ -113,40 +118,47 @@ export default async function AdminPage() {
                     </div>
                 </section>
 
-                {/* 2. Group Management */}
-                <GuestGroupManagement groups={groups} />
-
-                {/* 3. Group Performance Grid */}
-                <section>
-                    <h2 className="text-3xl font-black text-slate-900 mb-6 tracking-tight">Grup Performansı</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {groupStats.map(stat => (
-                            <div key={stat.name} className="bg-white rounded-[2rem] border border-slate-100 shadow-lg p-6 flex flex-col gap-4">
-                                <div className="border-b border-slate-50 pb-4">
-                                    <h3 className="text-lg font-black text-slate-800 leading-tight">{stat.name}</h3>
+                {/* 2. Tabs: Group Management, Performance & All Invitations */}
+                <AdminTabs
+                    groupManagementContent={<GuestGroupManagement groups={groups} />}
+                    allInvitationsContent={
+                        <InvitationsTable
+                            events={allEvents}
+                            hosts={allHosts}
+                            isAdmin={true}
+                            guestGroups={groups}
+                        />
+                    }
+                    groupPerformanceContent={
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {groupStats.map(stat => (
+                                <div key={stat.name} className="bg-white rounded-[2rem] border border-slate-100 shadow-lg p-6 flex flex-col gap-4">
+                                    <div className="border-b border-slate-50 pb-4">
+                                        <h3 className="text-lg font-black text-slate-800 leading-tight">{stat.name}</h3>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-2 text-center">
+                                        <div className="bg-emerald-50 rounded-xl p-2">
+                                            <div className="text-xl font-bold text-emerald-700">{stat.accepted}</div>
+                                            <div className="text-[8px] font-black uppercase text-emerald-400">Kabul</div>
+                                        </div>
+                                        <div className="bg-amber-50 rounded-xl p-2">
+                                            <div className="text-xl font-bold text-amber-600">{stat.pending}</div>
+                                            <div className="text-[8px] font-black uppercase text-amber-400">Bekler</div>
+                                        </div>
+                                        <div className="bg-red-50 rounded-xl p-2">
+                                            <div className="text-xl font-bold text-red-600">{stat.rejected}</div>
+                                            <div className="text-[8px] font-black uppercase text-red-400">Red</div>
+                                        </div>
+                                        <div className="bg-slate-100 rounded-xl p-2">
+                                            <div className="text-xl font-bold text-slate-600">{stat.noShow}</div>
+                                            <div className="text-[8px] font-black uppercase text-slate-400">Yok</div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-4 gap-2 text-center">
-                                    <div className="bg-emerald-50 rounded-xl p-2">
-                                        <div className="text-xl font-bold text-emerald-700">{stat.accepted}</div>
-                                        <div className="text-[8px] font-black uppercase text-emerald-400">Kabul</div>
-                                    </div>
-                                    <div className="bg-amber-50 rounded-xl p-2">
-                                        <div className="text-xl font-bold text-amber-600">{stat.pending}</div>
-                                        <div className="text-[8px] font-black uppercase text-amber-400">Bekler</div>
-                                    </div>
-                                    <div className="bg-red-50 rounded-xl p-2">
-                                        <div className="text-xl font-bold text-red-600">{stat.rejected}</div>
-                                        <div className="text-[8px] font-black uppercase text-red-400">Red</div>
-                                    </div>
-                                    <div className="bg-slate-100 rounded-xl p-2">
-                                        <div className="text-xl font-bold text-slate-600">{stat.noShow}</div>
-                                        <div className="text-[8px] font-black uppercase text-slate-400">Yok</div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
+                            ))}
+                        </div>
+                    }
+                />
 
             </main>
         </div>

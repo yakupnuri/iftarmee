@@ -88,3 +88,21 @@ export function getInvitationRejectedEmailHtml(hostName: string, dateStr: string
     </div>
     `;
 }
+
+export function getNoShowEmailHtml(hostName: string, dateStr: string, groupName: string) {
+  return `
+    <div style="font-family: sans-serif; color: #334155; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+      <h2 style="color: #64748b; margin-bottom: 20px;">🚫 Katılmadı Bilgilendirmesi (No-Show)</h2>
+      <p>Merhaba Admin,</p>
+      <p><strong>${dateStr}</strong> tarihinde <strong>${hostName}</strong> tarafından ağırlanması beklenen <strong>${groupName}</strong> grubunun iftar programına katılmadığı bildirilmiştir.</p>
+      <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #cbd5e1;">
+        <p style="margin: 0; color: #475569;"><strong>Grup:</strong> ${groupName}</p>
+        <p style="margin: 0; color: #475569;"><strong>Ev Sahibi:</strong> ${hostName}</p>
+        <p style="margin: 0; color: #475569;"><strong>Tarih:</strong> ${dateStr}</p>
+      </div>
+      <p>Grup performans kayıtları bu bilgiye göre güncellenmiştir.</p>
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+      <p style="font-size: 12px; color: #94a3b8;">Bu e-posta Iftar Match sistemi tarafından otomatik olarak oluşturulmuştur.</p>
+    </div>
+    `;
+}

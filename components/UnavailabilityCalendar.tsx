@@ -49,7 +49,7 @@ export function UnavailabilityCalendar({
                 </p>
             </div>
 
-            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3">
+            <div className="grid grid-cols-4 gap-3">
                 {ramadanDates.map((date, index) => {
                     const dateStr = formatDate(date);
                     const isUnavailable = unavailableDates.includes(dateStr);

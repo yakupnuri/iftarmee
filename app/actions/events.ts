@@ -9,12 +9,14 @@ import { GUEST_GROUPS, getGuestGroupByName } from "@/lib/guest-groups";
 import { nanoid } from "@/lib/nanoid";
 
 import { isAdmin } from "@/app/actions/admin";
+import { ADMIN_EMAILS } from "@/lib/admin-emails";
 import { getGroups } from "@/app/actions/groups";
 import {
   sendEmail,
   getNewInvitationEmailHtml,
   getInvitationAcceptedEmailHtml,
-  getInvitationRejectedEmailHtml
+  getInvitationRejectedEmailHtml,
+  getNoShowEmailHtml
 } from "@/lib/mail";
 
 export async function createEvent(formData: FormData) {
@@ -144,7 +146,7 @@ export async function acceptEvent(eventId: string) {
     if (!event) return { error: "Davet bulunamadı veya silinmiş." };
 
     // Yetki Kontrolü: Admin mi yoksa bu grubun sorumlusu mu?
-    const admin = userEmail === "vahidnuri@gmail.com";
+    const admin = await isAdmin();
     let isAuthorized = admin;
 
     if (!admin) {
@@ -207,7 +209,7 @@ export async function rejectEvent(eventId: string, reason?: string) {
     if (!event) return { error: "Davet bulunamadı veya silinmiş." };
 
     // Yetki Kontrolü
-    const admin = userEmail === "vahidnuri@gmail.com";
+    const admin = await isAdmin();
     let isAuthorized = admin;
 
     if (!admin) {
@@ -291,9 +293,9 @@ export async function markAsNoShow(eventId: string) {
       where: eq(hosts.email, userEmail),
     });
 
-    const isAdmin = userEmail === "vahidnuri@gmail.com";
+    const isUserAdmin = await isAdmin();
 
-    if (!isAdmin && (!host || host.id !== event.hostId)) {
+    if (!isUserAdmin && (!host || host.id !== event.hostId)) {
       return { error: "Unauthorized" };
     }
 
@@ -304,6 +306,16 @@ export async function markAsNoShow(eventId: string) {
         rejectionReason: "Davetliler iftara katılmadı."
       })
       .where(eq(events.id, eventId));
+
+    // -- Mail Gönderimi (No-Show - Adminleri Uyar) --
+    // Hem Vahid Bey'e hem Melek Hanım'a mail gönder
+    for (const adminEmail of ADMIN_EMAILS) {
+      await sendEmail({
+        to: adminEmail,
+        subject: `🚫 Katılmadı: ${event.guestGroupName} / ${event.date}`,
+        html: getNoShowEmailHtml(host?.name || "Bilinmeyen", event.date, event.guestGroupName)
+      });
+    }
 
     revalidatePath("/host");
     revalidatePath("/");
