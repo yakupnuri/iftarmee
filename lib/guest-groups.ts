@@ -30,7 +30,7 @@ export const GUEST_GROUPS = [
     color: "bg-orange-100 border-orange-300 text-orange-800 hover:ring-orange-400"
   },
   {
-    name: "Kız Öğrenci Evi",
+    name: "Kız Öğrenci Evi (Eve teslim edilecek)",
     count: 6,
     isDelivery: true,
     deliveryMessage: "Kız öğrencilerin evine yemek gidecek, iftar gidecek.",
